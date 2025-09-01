@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Next.js (Node 20)
-# Builds the app and runs `next start` on port 3000.
+# Builds the app and runs `next start` on port 3003.
 
 FROM node:24-alpine AS base
 WORKDIR /app
@@ -32,6 +32,5 @@ COPY package.json ./
 # Prune dev dependencies to slim the image
 RUN npm prune --omit=dev
 
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE 3003
 CMD ["npm", "run", "start"]
