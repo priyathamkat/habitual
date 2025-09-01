@@ -1,17 +1,20 @@
 services:
     backend-dev:
-        build: ./habitual/backend
+        build:
+            context: ./habitual/backend
+            dockerfile: dev.Dockerfile
         ports:
             - "9009:9009"
         volumes:
             - ./habitual/backend:/app
             # Isolate the container venv from the host venv
             - habitual-backend-venv:/app/.venv
-        command: ["--reload"]
         profiles: ["dev"]
 
     backend-prod:
-        build: ./habitual/backend
+        build:
+            context: ./habitual/backend
+            dockerfile: Dockerfile
         ports:
             - "9009:9009"
         profiles: ["prod"]
