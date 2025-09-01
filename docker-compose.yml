@@ -19,5 +19,25 @@ services:
             - "9009:9009"
         profiles: ["prod"]
 
+    frontend-dev:
+        build:
+            context: ./habitual/frontend
+            dockerfile: dev.Dockerfile
+        ports:
+            - "3003:3003"
+        volumes:
+            - ./habitual/frontend:/app
+            - habitual-frontend-node_modules:/app/node_modules
+        profiles: ["dev"]
+
+    frontend-prod:
+        build:
+            context: ./habitual/frontend
+            dockerfile: Dockerfile
+        ports:
+            - "3003:3003"
+        profiles: ["prod"]
+
 volumes:
     habitual-backend-venv:
+    habitual-frontend-node_modules:
