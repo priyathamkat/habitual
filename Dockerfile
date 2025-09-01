@@ -10,5 +10,8 @@ ENV PATH="/root/.local/bin:${PATH}"
 EXPOSE 9009
 
 WORKDIR /app
+COPY pyproject.toml .
+RUN uv sync --no-dev
+COPY . .
 
-ENTRYPOINT ["uv", "run", "uvicorn", "habitual.main:app", "--host", "0.0.0.0", "--port", "9009", "--reload"]
+ENTRYPOINT ["uv", "run", "uvicorn", "habitual.main:app", "--host", "0.0.0.0", "--port", "9009"]

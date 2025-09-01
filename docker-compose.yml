@@ -1,7 +1,15 @@
 services:
-    habitual:
+    app-dev:
         build: .
         ports:
             - "9009:9009"
         volumes:
             - .:/app
+        command: ["--reload"]
+        profiles: ["dev"]
+
+    app:
+        build: .
+        ports:
+            - "9009:9009"
+        profiles: ["prod"]
