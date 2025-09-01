@@ -1,15 +1,15 @@
 services:
-    app-dev:
-        build: .
+    backend-dev:
+        build: ./habitual/backend
         ports:
             - "9009:9009"
         volumes:
-            - .:/app
+            - ./habitual/backend:/app
         command: ["--reload"]
         profiles: ["dev"]
 
-    app:
-        build: .
+    backend-prod:
+        build: ./habitual/backend
         ports:
             - "9009:9009"
         profiles: ["prod"]
