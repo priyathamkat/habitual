@@ -5,6 +5,8 @@ services:
             - "9009:9009"
         volumes:
             - ./habitual/backend:/app
+            # Isolate the container venv from the host venv
+            - habitual-backend-venv:/app/.venv
         command: ["--reload"]
         profiles: ["dev"]
 
@@ -13,3 +15,6 @@ services:
         ports:
             - "9009:9009"
         profiles: ["prod"]
+
+volumes:
+    habitual-backend-venv:
