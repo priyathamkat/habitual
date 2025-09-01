@@ -21,5 +21,5 @@ else
     exit 1
 fi
 
-docker compose --profile "*" build
+docker compose --profile "$PROFILE" build
 docker compose --profile "$PROFILE" up -d --remove-orphans
