@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import cast
+from typing import Optional, cast
 
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import func
@@ -39,16 +39,16 @@ async def list_entries_db(limit: int, offset: int, order_desc: bool) -> tuple[li
     return await run_in_threadpool(_list_entries, limit, offset, order_desc)
 
 
-def _get_entry(entry_id: str) -> Entry | None:
+def _get_entry(entry_id: str) -> Optional[Entry]:
     with get_session() as session:
         return session.get(Entry, entry_id)
 
 
-async def get_entry_db(entry_id: str) -> Entry | None:
+async def get_entry_db(entry_id: str) -> Optional[Entry]:
     return await run_in_threadpool(_get_entry, entry_id)
 
 
-def _update_entry(entry_id: str, content: str | None) -> Entry | None:
+def _update_entry(entry_id: str, content: Optional[str]) -> Optional[Entry]:
     with get_session() as session:
         entry = session.get(Entry, entry_id)
         if not entry:
@@ -61,7 +61,7 @@ def _update_entry(entry_id: str, content: str | None) -> Entry | None:
         return entry
 
 
-async def update_entry_db(entry_id: str, content: str | None) -> Entry | None:
+async def update_entry_db(entry_id: str, content: Optional[str]) -> Optional[Entry]:
     return await run_in_threadpool(_update_entry, entry_id, content)
 
 

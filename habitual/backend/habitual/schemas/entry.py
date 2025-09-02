@@ -19,7 +19,7 @@ class EntryUpdate(BaseModel):
 
 
 class EntryListResponse(BaseModel):
-    items: List[EntryRead]
+    entries: List[EntryRead]
     total: int
     limit: int
     offset: int
