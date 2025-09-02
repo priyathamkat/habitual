@@ -6,6 +6,9 @@ ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 
+# Install dependencies at build time so the named volume gets seeded
+COPY package.json package-lock.json ./
+RUN npm ci
+
 EXPOSE 3003
-# No build-time installs; volume will mount source and node_modules
 CMD ["npm", "run", "dev"]
