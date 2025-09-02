@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Next.js (Node 20)
 # Builds the app and runs `next start` on port 3003.
 
-FROM node:24-alpine AS base
+FROM node:24 AS base
 WORKDIR /app
 
 # Install dependencies (with dev deps) for building

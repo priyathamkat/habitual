@@ -1,6 +1,10 @@
 services:
     mysql:
         image: mysql:9.4
+        ports:
+            - "3306:3306"
+        volumes:
+            - habitual-mysql-data:/var/lib/mysql
         environment:
             MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
             MYSQL_USER: habitual
@@ -9,10 +13,6 @@ services:
         secrets:
             - db_root_password
             - db_password
-        ports:
-            - "3306:3306"
-        volumes:
-            - habitual-mysql-data:/var/lib/mysql
         profiles: ["dev", "prod"]
 
     backend-dev:
@@ -61,9 +61,10 @@ services:
             dockerfile: dev.Dockerfile
         ports:
             - "3003:3003"
+        environment:
+            - NODE_ENV=development
         volumes:
             - ./habitual/frontend:/app
-            - habitual-frontend-node_modules:/app/node_modules
         profiles: ["dev"]
 
     frontend-prod:
@@ -72,11 +73,12 @@ services:
             dockerfile: Dockerfile
         ports:
             - "3003:3003"
+        environment:
+            - NODE_ENV=production
         profiles: ["prod"]
 
 volumes:
     habitual-backend-venv:
-    habitual-frontend-node_modules:
     habitual-mysql-data:
 
 secrets:
