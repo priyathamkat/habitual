@@ -13,14 +13,13 @@ import {
   Text,
   Textarea,
   Title,
-  TextInput,
   Select,
   Tooltip,
   rem,
 } from "@mantine/core";
 import { createEntry, deleteEntry, listEntries, updateEntry } from "../lib/api";
 import type { EntryRead } from "../types/entries";
-import { Plus, Pencil, Trash2, Search, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -46,11 +45,9 @@ export default function EntriesClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState<EntryRead | null>(null);
 
-  const [query, setQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState<string | null>("all");
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
-  const timeZone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -145,16 +142,12 @@ export default function EntriesClient() {
 
   const filteredItems = useMemo(() => {
     let list = items;
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      list = list.filter((i) => i.content.toLowerCase().includes(q));
-    }
     if (timeFilter === "month") {
       const start = dayjs().startOf("month");
       list = list.filter((i) => dayjs(i.timestamp).isAfter(start));
     }
     return list;
-  }, [items, query, timeFilter]);
+  }, [items, timeFilter]);
 
   return (
     <Stack p="lg" gap="md">
@@ -162,19 +155,12 @@ export default function EntriesClient() {
         <Title order={2} style={{ color: "#EAEAEA" }}>
           Entries
         </Title>
-        <Button variant="subtle" onClick={openAdd} leftSection={<Plus size={16} />}>
+        <Button color="blue" onClick={openAdd} leftSection={<Plus size={16} />}>
           Add Entry
         </Button>
       </Group>
 
       <Group gap="sm" wrap="wrap">
-        <TextInput
-          placeholder="Search entries"
-          leftSection={<Search size={16} />}
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-          style={{ flex: 1, minWidth: rem(220) }}
-        />
         <Select
           data={[
             { value: "all", label: "All time" },
@@ -184,7 +170,6 @@ export default function EntriesClient() {
           onChange={setTimeFilter}
           style={{ width: rem(160) }}
         />
-        <Text size="sm" c="#A0A0A0">Times shown in {timeZone}</Text>
       </Group>
 
       {error && (

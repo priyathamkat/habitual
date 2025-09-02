@@ -39,6 +39,18 @@ export default function RootLayout({
             primaryColor: "blue",
             fontFamily: "var(--font-inter), var(--font-geist-sans), system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
             defaultRadius: "md",
+            components: {
+              Button: {
+                styles: {
+                  root: { boxShadow: "none" },
+                },
+              },
+              ActionIcon: {
+                styles: {
+                  root: { boxShadow: "none" },
+                },
+              },
+            },
           }}
         >
           {children}
