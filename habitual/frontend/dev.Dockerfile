@@ -8,7 +8,7 @@ ENV HOSTNAME=0.0.0.0
 
 # Seed node_modules into the named volume on first run
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 EXPOSE 3003
 
