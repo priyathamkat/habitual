@@ -4,13 +4,16 @@ from sqlmodel import SQLModel, create_engine
 
 
 def _build_database_url() -> str:
-    user = os.environ["DB_USER"]
-    password_file = os.environ["DB_PASSWORD_FILE"]
-    host = os.environ["DB_HOST"]
-    port = os.environ["DB_PORT"]
-    name = os.environ["DB_NAME"]
-    with open(password_file, "r") as f:
-        password = f.read().strip()
+    user = os.getenv("DB_USER", "habitual")
+    password_file = os.getenv("DB_PASSWORD_FILE", "")
+    host = os.getenv("DB_HOST", "mysql")
+    port = os.getenv("DB_PORT", "3306")
+    name = os.getenv("DB_NAME", "habitual")
+
+    password = ""
+    if password_file:
+        with open(password_file, "r") as f:
+            password = f.read().strip()
     return f"mysql+pymysql://{user}:{password}@{host}:{port}/{name}"
 
 
