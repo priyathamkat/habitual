@@ -13,6 +13,12 @@ services:
         secrets:
             - db_root_password
             - db_password
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$(cat /run/secrets/db_root_password)"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 10s
         profiles: ["dev", "prod"]
 
     backend-dev:
@@ -34,7 +40,14 @@ services:
         secrets:
             - db_password
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-fsS", "http://localhost:9009/health"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 10s
         profiles: ["dev"]
 
     backend-prod:
@@ -52,7 +65,14 @@ services:
         secrets:
             - db_password
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-fsS", "http://localhost:9009/health"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 10s
         profiles: ["prod"]
 
     frontend-dev:
@@ -63,6 +83,11 @@ services:
             - "3003:3003"
         volumes:
             - ./habitual/frontend:/app
+        environment:
+            API_BASE_INTERNAL: http://backend-dev:9009/api/v1
+        depends_on:
+            backend-dev:
+                condition: service_healthy
         profiles: ["dev"]
 
     frontend-prod:
@@ -71,6 +96,11 @@ services:
             dockerfile: Dockerfile
         ports:
             - "3003:3003"
+        environment:
+            API_BASE_INTERNAL: http://backend-prod:9009/api/v1
+        depends_on:
+            backend-prod:
+                condition: service_healthy
         profiles: ["prod"]
 
 volumes:

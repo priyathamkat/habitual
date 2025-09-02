@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from habitual.api.status import router as status_router
 from habitual.api.v1 import version_router as v1_router
 from habitual.db.base import initialize_db
 
@@ -14,4 +15,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.include_router(status_router)
 app.include_router(v1_router, prefix="/api/v1")
