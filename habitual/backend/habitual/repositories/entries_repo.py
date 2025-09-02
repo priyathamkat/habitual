@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional, cast
+from uuid import UUID
 
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import func
@@ -39,16 +40,16 @@ async def list_entries_db(limit: int, offset: int, order_desc: bool) -> tuple[li
     return await run_in_threadpool(_list_entries, limit, offset, order_desc)
 
 
-def _get_entry(entry_id: str) -> Optional[Entry]:
+def _get_entry(entry_id: UUID) -> Optional[Entry]:
     with get_session() as session:
         return session.get(Entry, entry_id)
 
 
-async def get_entry_db(entry_id: str) -> Optional[Entry]:
+async def get_entry_db(entry_id: UUID) -> Optional[Entry]:
     return await run_in_threadpool(_get_entry, entry_id)
 
 
-def _update_entry(entry_id: str, content: Optional[str]) -> Optional[Entry]:
+def _update_entry(entry_id: UUID, content: Optional[str]) -> Optional[Entry]:
     with get_session() as session:
         entry = session.get(Entry, entry_id)
         if not entry:
@@ -61,11 +62,11 @@ def _update_entry(entry_id: str, content: Optional[str]) -> Optional[Entry]:
         return entry
 
 
-async def update_entry_db(entry_id: str, content: Optional[str]) -> Optional[Entry]:
+async def update_entry_db(entry_id: UUID, content: Optional[str]) -> Optional[Entry]:
     return await run_in_threadpool(_update_entry, entry_id, content)
 
 
-def _delete_entry(entry_id: str) -> bool:
+def _delete_entry(entry_id: UUID) -> bool:
     with get_session() as session:
         entry = session.get(Entry, entry_id)
         if not entry:
@@ -75,5 +76,5 @@ def _delete_entry(entry_id: str) -> bool:
         return True
 
 
-async def delete_entry_db(entry_id: str) -> bool:
+async def delete_entry_db(entry_id: UUID) -> bool:
     return await run_in_threadpool(_delete_entry, entry_id)

@@ -1,13 +1,12 @@
-import uuid
 from datetime import datetime, timezone
+from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
 
 class Entry(SQLModel, table=True):
-    # For MySQL you can store UUIDs as CHAR(36). If you want BINARY(16), that’s a different setup.
-    id: str = Field(
-        default_factory=uuid.uuid4,
+    id: UUID = Field(
+        default_factory=uuid4,
         primary_key=True,
         index=True,
         description="UUID primary key",

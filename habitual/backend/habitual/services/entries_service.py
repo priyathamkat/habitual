@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from uuid import UUID
 
 from habitual.models.entry import Entry
 from habitual.repositories.entries_repo import (
@@ -8,7 +9,7 @@ from habitual.repositories.entries_repo import (
     list_entries_db,
     update_entry_db,
 )
-from habitual.schemas.entry import EntryCreate
+from habitual.schemas.entries import EntryCreate
 
 
 async def create_entry_service(
@@ -22,16 +23,16 @@ async def create_entry_service(
 async def list_entries_service(limit: int, offset: int, order: str) -> dict[str, Any]:
     order_desc = order.lower() != "asc"
     items, total = await list_entries_db(limit=limit, offset=offset, order_desc=order_desc)
-    return {"entries": items, "total": total, "limit": limit, "offset": offset}
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
-async def get_entry_service(entry_id: str) -> Optional[Entry]:
+async def get_entry_service(entry_id: UUID) -> Optional[Entry]:
     return await get_entry_db(entry_id)
 
 
-async def update_entry_service(entry_id: str, content: Optional[str]) -> Optional[Entry]:
+async def update_entry_service(entry_id: UUID, content: Optional[str]) -> Optional[Entry]:
     return await update_entry_db(entry_id, content)
 
 
-async def delete_entry_service(entry_id: str) -> bool:
+async def delete_entry_service(entry_id: UUID) -> bool:
     return await delete_entry_db(entry_id)

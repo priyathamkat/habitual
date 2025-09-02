@@ -1,6 +1,8 @@
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
-from habitual.schemas.entry import (
+from habitual.schemas.entries import (
     EntryCreate,
     EntryListResponse,
     EntryRead,
@@ -21,7 +23,7 @@ router = APIRouter(prefix="/entries", tags=["Entries"])
 async def create_entry(entry_create: EntryCreate, request: Request, response: Response):
     entry = await create_entry_service(entry_create)
     # Set Location header to the new resource
-    response.headers["Location"] = str(request.url_for("get_entry", entry_id=entry.id))
+    response.headers["Location"] = str(request.url_for("get_entry", entry_id=str(entry.id)))
     return entry
 
 
@@ -31,7 +33,7 @@ async def list_entries(limit: int = 20, offset: int = 0, order: str = "desc"):
 
 
 @router.get("/{entry_id}", response_model=EntryRead, name="get_entry")
-async def get_entry(entry_id: str):
+async def get_entry(entry_id: UUID):
     entry = await get_entry_service(entry_id)
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found")
@@ -39,7 +41,7 @@ async def get_entry(entry_id: str):
 
 
 @router.patch("/{entry_id}", response_model=EntryRead)
-async def update_entry(entry_id: str, entry_update: EntryUpdate):
+async def update_entry(entry_id: UUID, entry_update: EntryUpdate):
     entry = await update_entry_service(entry_id, content=entry_update.content)
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found")
@@ -47,7 +49,7 @@ async def update_entry(entry_id: str, entry_update: EntryUpdate):
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_entry(entry_id: str):
+async def delete_entry(entry_id: UUID):
     ok = await delete_entry_service(entry_id)
     if not ok:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found")
