@@ -1,4 +1,20 @@
 services:
+    mysql:
+        image: mysql:9.4
+        environment:
+            MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+            MYSQL_USER: habitual
+            MYSQL_PASSWORD_FILE: /run/secrets/db_password
+            MYSQL_DATABASE: habitual
+        secrets:
+            - db_root_password
+            - db_password
+        ports:
+            - "3306:3306"
+        volumes:
+            - habitual-mysql-data:/var/lib/mysql
+        profiles: ["dev", "prod"]
+
     backend-dev:
         build:
             context: ./habitual/backend
@@ -9,6 +25,16 @@ services:
             - ./habitual/backend:/app
             # Isolate the container venv from the host venv
             - habitual-backend-venv:/app/.venv
+        environment:
+            DB_USER: habitual
+            DB_PASSWORD_FILE: /run/secrets/db_password
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_NAME: habitual
+        secrets:
+            - db_password
+        depends_on:
+            - mysql
         profiles: ["dev"]
 
     backend-prod:
@@ -17,6 +43,16 @@ services:
             dockerfile: Dockerfile
         ports:
             - "9009:9009"
+        environment:
+            DB_USER: habitual
+            DB_PASSWORD_FILE: /run/secrets/db_password
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_NAME: habitual
+        secrets:
+            - db_password
+        depends_on:
+            - mysql
         profiles: ["prod"]
 
     frontend-dev:
@@ -41,3 +77,10 @@ services:
 volumes:
     habitual-backend-venv:
     habitual-frontend-node_modules:
+    habitual-mysql-data:
+
+secrets:
+    db_root_password:
+        file: ./habitual/backend/secrets/db_root_password.txt
+    db_password:
+        file: ./habitual/backend/secrets/db_password.txt
