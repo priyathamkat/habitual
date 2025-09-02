@@ -61,8 +61,6 @@ services:
             dockerfile: dev.Dockerfile
         ports:
             - "3003:3003"
-        environment:
-            - NODE_ENV=development
         volumes:
             - ./habitual/frontend:/app
         profiles: ["dev"]
@@ -73,8 +71,6 @@ services:
             dockerfile: Dockerfile
         ports:
             - "3003:3003"
-        environment:
-            - NODE_ENV=production
         profiles: ["prod"]
 
 volumes:
