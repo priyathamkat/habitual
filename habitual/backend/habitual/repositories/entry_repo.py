@@ -1,4 +1,3 @@
-from fastapi.concurrency import run_in_threadpool
 from sqlmodel import Session
 
 from habitual.models.entry import Entry
@@ -13,4 +12,4 @@ def _save_entry(entry: Entry, session: Session) -> Entry:
 
 async def create_entry_db(entry: Entry, session: Session) -> Entry:
     # Run blocking DB work in a thread to avoid blocking the event loop
-    return await run_in_threadpool(_save_entry, entry, session)
+    return _save_entry(entry, session)
