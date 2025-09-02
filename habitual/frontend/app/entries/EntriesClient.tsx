@@ -23,8 +23,10 @@ import type { EntryRead } from "../types/entries";
 import { Plus, Pencil, Trash2, Search, AlertTriangle } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 const PAGE_SIZE = 10;
 
@@ -227,16 +229,7 @@ export default function EntriesClient() {
               <Group justify="space-between" align="start">
                 <div>
                   <Text size="xs" c="#A0A0A0">
-                    {new Date(it.timestamp).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "2-digit",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                      timeZone,
-                    })} 
-                    • {dayjs(it.timestamp).fromNow()}
+                    {dayjs.utc(it.timestamp).local().format("MMM D, YYYY h:mm A")} • {dayjs.utc(it.timestamp).local().fromNow()}
                   </Text>
                 </div>
                 <Group gap="xs">
