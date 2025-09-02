@@ -5,8 +5,9 @@ from sqlmodel import Field, SQLModel
 
 
 class Entry(SQLModel, table=True):
+    # For MySQL you can store UUIDs as CHAR(36). If you want BINARY(16), that’s a different setup.
     id: str = Field(
-        default_factory=lambda: str(uuid.uuid4()),
+        default_factory=uuid.uuid4,
         primary_key=True,
         index=True,
         description="UUID primary key",
