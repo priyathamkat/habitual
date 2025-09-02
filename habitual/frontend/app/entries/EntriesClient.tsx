@@ -1,9 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Group, Loader, Modal, Pagination, Paper, Stack, Table, Text, Textarea, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Loader,
+  Modal,
+  Pagination,
+  Paper,
+  Stack,
+  Text,
+  Textarea,
+  Title,
+  TextInput,
+  Select,
+  Tooltip,
+  rem,
+} from "@mantine/core";
 import { createEntry, deleteEntry, listEntries, updateEntry } from "../lib/api";
 import type { EntryRead } from "../types/entries";
+import { Plus, Pencil, Trash2, Search, AlertTriangle } from "lucide-react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 const PAGE_SIZE = 10;
 
@@ -20,7 +41,14 @@ export default function EntriesClient() {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<EntryRead | null>(null);
+
+  const [query, setQuery] = useState("");
+  const [timeFilter, setTimeFilter] = useState<string | null>("all");
+
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
+  const timeZone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,27 +109,80 @@ export default function EntriesClient() {
     }
   }
 
-  async function onDelete(entry: EntryRead) {
-    // simple confirm; could be replaced with a nicer modal
-    const ok = window.confirm("Delete this entry?");
-    if (!ok) return;
+  function askDelete(entry: EntryRead) {
+    setToDelete(entry);
+    setConfirmOpen(true);
+  }
+
+  async function onConfirmDelete() {
+    if (!toDelete) return;
     try {
-      await deleteEntry(entry.id);
-      // after deletion, reload current page; adjust page if became empty
+      await deleteEntry(toDelete.id);
       const newTotal = total - 1;
       const maxPage = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
       if (page > maxPage) setPage(maxPage);
       await load();
     } catch (e: any) {
       setError(e?.message ?? "Failed to delete entry");
+    } finally {
+      setConfirmOpen(false);
+      setToDelete(null);
     }
   }
 
+  function onKeyDownModal(e: React.KeyboardEvent<HTMLDivElement>, save: () => void, cancel: () => void) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      save();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      cancel();
+    }
+  }
+
+  const filteredItems = useMemo(() => {
+    let list = items;
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter((i) => i.content.toLowerCase().includes(q));
+    }
+    if (timeFilter === "month") {
+      const start = dayjs().startOf("month");
+      list = list.filter((i) => dayjs(i.timestamp).isAfter(start));
+    }
+    return list;
+  }, [items, query, timeFilter]);
+
   return (
-    <Stack p="md" gap="md">
-      <Group justify="space-between">
-        <Title order={2}>Entries</Title>
-        <Button onClick={openAdd}>Add Entry</Button>
+    <Stack p="lg" gap="md">
+      <Group justify="space-between" align="center">
+        <Title order={2} style={{ color: "#EAEAEA" }}>
+          Entries
+        </Title>
+        <Button variant="subtle" onClick={openAdd} leftSection={<Plus size={16} />}>
+          Add Entry
+        </Button>
+      </Group>
+
+      <Group gap="sm" wrap="wrap">
+        <TextInput
+          placeholder="Search entries"
+          leftSection={<Search size={16} />}
+          value={query}
+          onChange={(e) => setQuery(e.currentTarget.value)}
+          style={{ flex: 1, minWidth: rem(220) }}
+        />
+        <Select
+          data={[
+            { value: "all", label: "All time" },
+            { value: "month", label: "This month" },
+          ]}
+          value={timeFilter}
+          onChange={setTimeFilter}
+          style={{ width: rem(160) }}
+        />
+        <Text size="sm" c="#A0A0A0">Times shown in {timeZone}</Text>
       </Group>
 
       {error && (
@@ -110,71 +191,103 @@ export default function EntriesClient() {
         </Paper>
       )}
 
-      <Paper withBorder radius="md" p="0">
-        {loading ? (
-          <Group justify="center" p="lg">
-            <Loader />
-          </Group>
-        ) : (
-          <Table striped highlightOnHover withTableBorder horizontalSpacing="md" verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Timestamp</Table.Th>
-                <Table.Th>Content</Table.Th>
-                <Table.Th style={{ width: 160 }}>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {items.length === 0 ? (
-                <Table.Tr>
-                  <Table.Td colSpan={3}>
-                    <Text c="dimmed">No entries</Text>
-                  </Table.Td>
-                </Table.Tr>
-              ) : (
-                items.map((it) => (
-                  <Table.Tr key={it.id}>
-                    <Table.Td>{new Date(it.timestamp).toLocaleString()}</Table.Td>
-                    <Table.Td>
-                      <Text>{it.content}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Button size="xs" variant="light" onClick={() => openEdit(it)}>
-                          Edit
-                        </Button>
-                        <Button size="xs" color="red" variant="light" onClick={() => onDelete(it)}>
-                          Delete
-                        </Button>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))
-              )}
-            </Table.Tbody>
-          </Table>
-        )}
-      </Paper>
+      {loading ? (
+        <Group justify="center" p="lg">
+          <Loader />
+        </Group>
+      ) : filteredItems.length === 0 ? (
+        <Paper p="lg" radius="md" withBorder style={{ background: "var(--surface)", borderColor: "#2a2a2a" }}>
+          <Text c="dimmed">No entries</Text>
+        </Paper>
+      ) : (
+        <Stack>
+          {filteredItems.map((it) => (
+            <Paper
+              key={it.id}
+              p="md"
+              radius="md"
+              withBorder
+              style={{
+                position: "relative",
+                background: "var(--surface)",
+                borderColor: "#2a2a2a",
+                transition: "transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 18px rgba(0,0,0,0.3)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "#3B82F6";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "#2a2a2a";
+              }}
+            >
+              <Group justify="space-between" align="start">
+                <div>
+                  <Text size="xs" c="#A0A0A0">
+                    {new Date(it.timestamp).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "2-digit",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone,
+                    })} 
+                    • {dayjs(it.timestamp).fromNow()}
+                  </Text>
+                </div>
+                <Group gap="xs">
+                  <Tooltip label="Edit">
+                    <ActionIcon variant="subtle" onClick={() => openEdit(it)} aria-label="Edit">
+                      <Pencil size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="Delete">
+                    <ActionIcon variant="subtle" color="red" onClick={() => askDelete(it)} aria-label="Delete">
+                      <Trash2 size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+              </Group>
+              <Text mt="xs" fw={600} style={{ color: "#EAEAEA", lineHeight: 1.5, fontSize: rem(16) }}>
+                {it.content}
+              </Text>
+            </Paper>
+          ))}
+        </Stack>
+      )}
 
-      <Group justify="space-between">
-        <Text size="sm" c="dimmed">
+      <Group justify="space-between" align="center">
+        <Text size="sm" c="#A0A0A0">
           Total: {total}
+          {timeFilter === "month" ? ` • This month in view: ${filteredItems.length}` : ""}
         </Text>
         <Pagination value={page} onChange={setPage} total={totalPages} radius="md" />
       </Group>
 
       {/* Add Modal */}
-      <Modal opened={addOpen} onClose={() => setAddOpen(false)} title="Add Entry" centered>
-        <Stack>
+      <Modal
+        opened={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Entry"
+        centered
+        radius="md"
+        styles={{ content: { background: "#1E1E1E" } }}
+      >
+        <Stack onKeyDown={(e) => onKeyDownModal(e, onSubmitAdd, () => setAddOpen(false))}>
           <Textarea
-            placeholder="Write something..."
+            placeholder="Write something... add emojis like 🍎 🛏️ 🎥"
             autosize
             minRows={4}
             value={content}
             onChange={(e) => setContent(e.currentTarget.value)}
+            styles={{ input: { background: "#2C2C2C", color: "#fff", borderColor: "#333" } }}
           />
           <Group justify="end">
-            <Button variant="default" onClick={() => setAddOpen(false)} disabled={submitting}>
+            <Button variant="outline" color="gray" onClick={() => setAddOpen(false)} disabled={submitting}>
               Cancel
             </Button>
             <Button onClick={onSubmitAdd} loading={submitting} disabled={!content.trim()}>
@@ -185,16 +298,24 @@ export default function EntriesClient() {
       </Modal>
 
       {/* Edit Modal */}
-      <Modal opened={editOpen} onClose={() => setEditOpen(false)} title="Edit Entry" centered>
-        <Stack>
+      <Modal
+        opened={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Entry"
+        centered
+        radius="md"
+        styles={{ content: { background: "#1E1E1E" } }}
+      >
+        <Stack onKeyDown={(e) => onKeyDownModal(e, onSubmitEdit, () => setEditOpen(false))}>
           <Textarea
             autosize
             minRows={4}
             value={content}
             onChange={(e) => setContent(e.currentTarget.value)}
+            styles={{ input: { background: "#2C2C2C", color: "#fff", borderColor: "#333" } }}
           />
           <Group justify="end">
-            <Button variant="default" onClick={() => setEditOpen(false)} disabled={submitting}>
+            <Button variant="outline" color="gray" onClick={() => setEditOpen(false)} disabled={submitting}>
               Cancel
             </Button>
             <Button onClick={onSubmitEdit} loading={submitting} disabled={!content.trim()}>
@@ -203,7 +324,32 @@ export default function EntriesClient() {
           </Group>
         </Stack>
       </Modal>
+
+      {/* Delete confirmation */}
+      <Modal opened={confirmOpen} onClose={() => setConfirmOpen(false)} centered radius="md" title="Confirm delete" styles={{ content: { background: "#1E1E1E" } }}>
+        <Stack>
+          <Group>
+            <AlertTriangle color="#f59e0b" size={18} />
+            <Text>Are you sure you want to delete this entry?</Text>
+          </Group>
+          <Group justify="end">
+            <Button variant="subtle" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button color="red" onClick={onConfirmDelete} leftSection={<Trash2 size={16} />}>Delete</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Floating Action Button */}
+      <ActionIcon
+        onClick={openAdd}
+        size={56}
+        radius={56}
+        variant="filled"
+        style={{ position: "fixed", right: 24, bottom: 24, boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}
+        aria-label="Add entry"
+      >
+        <Plus />
+      </ActionIcon>
     </Stack>
   );
 }
-
