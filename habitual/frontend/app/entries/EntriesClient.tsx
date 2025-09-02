@@ -332,17 +332,6 @@ export default function EntriesClient() {
         </Stack>
       </Modal>
 
-      {/* Floating Action Button */}
-      <ActionIcon
-        onClick={openAdd}
-        size={56}
-        radius={56}
-        variant="filled"
-        style={{ position: "fixed", right: 24, bottom: 24, boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}
-        aria-label="Add entry"
-      >
-        <Plus />
-      </ActionIcon>
     </Stack>
   );
 }
